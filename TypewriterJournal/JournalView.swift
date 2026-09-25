@@ -1,11 +1,13 @@
 import SwiftUI
 import SwiftData
+import Combine
 
 struct JournalView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var context
     @Query(sort: \JournalEntry.createdAt, order: .reverse) private var entries: [JournalEntry]
     @State private var draft = ""
-    @State private var soundEnabled = true
+    @AppStorage("typingSoundEnabled") private var soundEnabled = true
     @State private var now = Date()
 
     private let ink = Color(red: 0.24, green: 0.22, blue: 0.20)
@@ -30,7 +32,7 @@ struct JournalView: View {
                         }
                         TextEditor(text: $draft)
                             .scrollContentBackground(.hidden)
-                            .frame(minHeight: 230)
+                            .frame(minHeight: 300)
                             .opacity(draft.isEmpty ? 0.65 : 1)
                             .onChange(of: draft) { old, new in
                                 if soundEnabled && new.count > old.count { TypingSound.shared.play() }
@@ -39,6 +41,7 @@ struct JournalView: View {
                     .font(.system(size: 18, design: .monospaced))
 
                     Button("Put it down") { save() }
+                        .keyboardShortcut("s", modifiers: .command)
                         .buttonStyle(.borderedProminent)
                         .tint(ink)
                         .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -69,12 +72,14 @@ struct JournalView: View {
                         }
                     }
                 }
-                .padding(24)
+                .padding(36)
+                .frame(maxWidth: 780)
+                .frame(maxWidth: .infinity)
             }
             .foregroundStyle(ink)
             .background(paper.ignoresSafeArea())
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .automatic) {
                     Button {
                         soundEnabled.toggle()
                     } label: {
@@ -84,6 +89,9 @@ struct JournalView: View {
                 }
             }
             .onAppear(perform: removeExpired)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { removeExpired() }
+            }
             .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { _ in
                 removeExpired()
             }
