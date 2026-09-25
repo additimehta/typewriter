@@ -13,3 +13,5 @@ Use **Command-S** to save an entry. The sound toggle remembers your preference.
 If you generated the previous iOS project, run `xcodegen generate` again after pulling this update.
 
 The app checks for expired entries when opened, when brought to the foreground, and every 30 seconds while running. It does not run a background deletion task; expired entries will be removed the next time the app opens. There is no account or cloud sync in this starter.
+
+Thhis project was made with the help of Chatgpt 
